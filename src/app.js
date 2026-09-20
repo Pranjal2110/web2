@@ -21,6 +21,7 @@
 import express from 'express';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
+import mongoose from 'mongoose';
 import methodOverride from 'method-override';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -74,15 +75,13 @@ app.use(methodOverride('_method'));
 // 4. USER SESSION MANAGEMENT (express-session + connect-mongo)
 // ----------------------------------------------------------------------------
 // Stores user login sessions in MongoDB so users stay logged in even if the server restarts
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/athenaeum_db';
-
 app.use(session({
   // Secret string used to sign the session ID cookie (keep this safe in production!)
   secret: process.env.SESSION_SECRET || 'athenaeum_modern_library_secret_key_2026',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: MONGODB_URI,
+    clientPromise: mongoose.connection.asPromise().then(conn => conn.getClient()),
     collectionName: 'sessions',
     ttl: 14 * 24 * 60 * 60 // Remember login sessions for 14 days
   }),

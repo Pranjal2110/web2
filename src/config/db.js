@@ -7,19 +7,19 @@
  * --------------------
  * This file is responsible for connecting our Node.js app to MongoDB using Mongoose.
  * 
- * ❓ WHAT IS MONGOOSE & MONGODB?
- * -----------------------------
- * - MongoDB is a NoSQL document database. Instead of rows and tables, it stores
- *   information as flexible, JSON-like documents.
- * - Mongoose is an ODM (Object Data Modeling) library for Node.js. It acts as
- *   a translator between our JavaScript code and the MongoDB database, providing
- *   schemas, validations, and query helpers.
+ * 🌐 THREE MODES OF CONNECTION (Resilient Multi-Stage Fallback):
+ * -------------------------------------------------------------
+ * 1. ☁️ Cloud MongoDB Atlas:
+ *    If `MONGODB_URI` is provided (in `.env` or in your Render.com Environment variables),
+ *    it connects to your cloud database cluster.
  * 
- * 🌐 CLOUD (ATLAS) VS LOCAL:
- * --------------------------
- * - MongoDB Atlas: A cloud database hosted by MongoDB. You provide a connection
- *   string like `mongodb+srv://user:pass@cluster.mongodb.net/athenaeum`.
- * - Local MongoDB: A database running directly on your computer at `mongodb://127.0.0.1:27017`.
+ * 2. 💻 Local MongoDB (Development):
+ *    If no `MONGODB_URI` is provided, it tries to connect to `mongodb://127.0.0.1:27017/athenaeum_db`.
+ * 
+ * 3. 🚀 Automatic Embedded In-Memory Fallback (Zero-Config Cloud Deployments):
+ *    If deployed on Render/cloud where no local MongoDB exists and no `MONGODB_URI` was set,
+ *    it automatically starts an embedded in-memory MongoDB engine.
+ *    This ensures your Render deployment NEVER crashes with `ECONNREFUSED`!
  * ============================================================================
  */
 
@@ -27,28 +27,65 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Default connection string: use environment variable MONGODB_URI if set, otherwise fallback to local
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/athenaeum_db';
+let activeMongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/athenaeum_db';
+let memoryServerInstance = null;
+
+export function getActiveMongoUri() {
+  return activeMongoUri;
+}
 
 /**
- * Connects to MongoDB database with error handling and helpful beginner diagnostics
+ * Connects to MongoDB with multi-stage fallback (Atlas -> Local -> In-Memory)
  */
 export async function connectDB() {
-  try {
-    const conn = await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000 // Wait up to 5 seconds before reporting a connection timeout
-    });
+  // --------------------------------------------------------------------------
+  // STAGE 1: Check if user provided an explicit MONGODB_URI (e.g. MongoDB Atlas)
+  // --------------------------------------------------------------------------
+  if (process.env.MONGODB_URI) {
+    try {
+      const conn = await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000
+      });
+      activeMongoUri = process.env.MONGODB_URI;
+      console.log(`🍃 Connected to MongoDB Atlas Cloud! Host: ${conn.connection.host} | Database: ${conn.connection.name}`);
+      return conn;
+    } catch (err) {
+      console.error(`❌ Failed to connect to provided MONGODB_URI: ${err.message}`);
+      console.error(`👉 Verify your username, password, and IP access list in MongoDB Atlas.`);
+      throw err;
+    }
+  }
 
-    console.log(`🍃 Connected to MongoDB! Host: ${conn.connection.host} | Database: ${conn.connection.name}`);
+  // --------------------------------------------------------------------------
+  // STAGE 2: Try connecting to Local MongoDB (default 127.0.0.1:27017)
+  // --------------------------------------------------------------------------
+  try {
+    const conn = await mongoose.connect(activeMongoUri, {
+      serverSelectionTimeoutMS: 2000 // Fast 2-second check
+    });
+    console.log(`🍃 Connected to Local MongoDB! Host: ${conn.connection.host} | Database: ${conn.connection.name}`);
     return conn;
-  } catch (err) {
-    console.error(`\n❌ MONGODB CONNECTION ERROR:`);
-    console.error(`   Message: ${err.message}`);
-    console.error(`\n💡 BEGINNER TROUBLESHOOTING HINTS:`);
-    console.error(`   1. If using Local MongoDB: Check if MongoDB is running (e.g., 'brew services start mongodb-community')`);
-    console.error(`   2. If using MongoDB Atlas Cloud: Verify your connection string in your .env file:`);
-    console.error(`      MONGODB_URI="mongodb+srv://<username>:<password>@cluster.mongodb.net/athenaeum"`);
-    console.error(`   3. Verify network access: in MongoDB Atlas, ensure your IP address is whitelisted (0.0.0.0/0 for testing).\n`);
-    throw err;
+  } catch (localErr) {
+    // ------------------------------------------------------------------------
+    // STAGE 3: Local MongoDB is unavailable (e.g. deployed on Render.com container)
+    // ------------------------------------------------------------------------
+    console.log(`\n⚠️  Local MongoDB not detected on 127.0.0.1:27017.`);
+    console.log(`✨ Cloud / Render environment detected without configured MONGODB_URI.`);
+    console.log(`🚀 Automatically activating embedded in-memory MongoDB engine...`);
+
+    try {
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      memoryServerInstance = await MongoMemoryServer.create();
+      activeMongoUri = memoryServerInstance.getUri();
+
+      const conn = await mongoose.connect(activeMongoUri);
+      console.log(`🍃 Connected to Embedded In-Memory MongoDB: ${activeMongoUri}`);
+      console.log(`✅ App started successfully with zero crash!`);
+      console.log(`💡 Tip: For persistent data across restarts on Render, set MONGODB_URI in Render's Environment tab.\n`);
+      return conn;
+    } catch (memErr) {
+      console.error(`❌ Critical database error:`, memErr);
+      throw memErr;
+    }
   }
 }
