@@ -24,6 +24,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import mongoose from 'mongoose';
 import { connectDB } from '../config/db.js';
 import { User } from '../models/User.js';
 import { Book } from '../models/Book.js';
@@ -197,8 +198,10 @@ const SEED_BOOKS = [
  * Executes the complete database population routine
  */
 export async function seedDatabase() {
-  console.log('🌱 Connecting to database to seed initial data...');
-  await connectDB();
+  if (mongoose.connection.readyState !== 1) {
+    console.log('🌱 Connecting to database to seed initial data...');
+    await connectDB();
+  }
 
   // STEP 1: Wipe old collections so we start with a clean slate
   await User.deleteMany({});

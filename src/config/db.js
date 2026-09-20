@@ -38,6 +38,10 @@ export function getActiveMongoUri() {
  * Connects to MongoDB with multi-stage fallback (Atlas -> Local -> In-Memory)
  */
 export async function connectDB() {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
   // --------------------------------------------------------------------------
   // STAGE 1: Check if user provided an explicit MONGODB_URI (e.g. MongoDB Atlas)
   // --------------------------------------------------------------------------
