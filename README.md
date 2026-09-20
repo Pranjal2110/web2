@@ -2,6 +2,8 @@
 
 > A full-stack role-based Library Management & Circulation Web Application built with **Server-Side Rendering (SSR)** using **EJS**, **Node.js**, **Express.js**, **MongoDB Atlas (via Mongoose)**, and **Session-based Authentication**.
 
+🌐 **Live Deployed Site (Free $0 Tier on Render)**: **[https://web2-3-g3bg.onrender.com](https://web2-3-g3bg.onrender.com)**
+
 ---
 
 ## 💡 Beginner's Introduction: How This App Works
