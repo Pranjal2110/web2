@@ -75,13 +75,22 @@ app.use(methodOverride('_method'));
 // 4. USER SESSION MANAGEMENT (express-session + connect-mongo)
 // ----------------------------------------------------------------------------
 // Stores user login sessions in MongoDB so users stay logged in even if the server restarts
+const sessionClientPromise = new Promise((resolve) => {
+  if (mongoose.connection.readyState === 1 && mongoose.connection.getClient()) {
+    return resolve(mongoose.connection.getClient());
+  }
+  mongoose.connection.once('open', () => {
+    resolve(mongoose.connection.getClient());
+  });
+});
+
 app.use(session({
   // Secret string used to sign the session ID cookie (keep this safe in production!)
   secret: process.env.SESSION_SECRET || 'athenaeum_modern_library_secret_key_2026',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    clientPromise: mongoose.connection.asPromise().then(conn => conn.getClient()),
+    clientPromise: sessionClientPromise,
     collectionName: 'sessions',
     ttl: 14 * 24 * 60 * 60 // Remember login sessions for 14 days
   }),

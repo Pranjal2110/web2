@@ -57,35 +57,40 @@ export async function connectDB() {
   }
 
   // --------------------------------------------------------------------------
-  // STAGE 2: Try connecting to Local MongoDB (default 127.0.0.1:27017)
+  // STAGE 2: Try connecting to Local MongoDB (Development only)
   // --------------------------------------------------------------------------
-  try {
-    const conn = await mongoose.connect(activeMongoUri, {
-      serverSelectionTimeoutMS: 2000 // Fast 2-second check
-    });
-    console.log(`🍃 Connected to Local MongoDB! Host: ${conn.connection.host} | Database: ${conn.connection.name}`);
-    return conn;
-  } catch (localErr) {
-    // ------------------------------------------------------------------------
-    // STAGE 3: Local MongoDB is unavailable (e.g. deployed on Render.com container)
-    // ------------------------------------------------------------------------
-    console.log(`\n⚠️  Local MongoDB not detected on 127.0.0.1:27017.`);
-    console.log(`✨ Cloud / Render environment detected without configured MONGODB_URI.`);
-    console.log(`🚀 Automatically activating embedded in-memory MongoDB engine...`);
-
+  const isCloudOrProd = process.env.RENDER || process.env.NODE_ENV === 'production';
+  if (!isCloudOrProd) {
     try {
-      const { MongoMemoryServer } = await import('mongodb-memory-server');
-      memoryServerInstance = await MongoMemoryServer.create();
-      activeMongoUri = memoryServerInstance.getUri();
-
-      const conn = await mongoose.connect(activeMongoUri);
-      console.log(`🍃 Connected to Embedded In-Memory MongoDB: ${activeMongoUri}`);
-      console.log(`✅ App started successfully with zero crash!`);
-      console.log(`💡 Tip: For persistent data across restarts on Render, set MONGODB_URI in Render's Environment tab.\n`);
+      const conn = await mongoose.connect(activeMongoUri, {
+        serverSelectionTimeoutMS: 2000 // Fast 2-second check
+      });
+      console.log(`🍃 Connected to Local MongoDB! Host: ${conn.connection.host} | Database: ${conn.connection.name}`);
       return conn;
-    } catch (memErr) {
-      console.error(`❌ Critical database error:`, memErr);
-      throw memErr;
+    } catch (localErr) {
+      console.log(`\n⚠️  Local MongoDB not detected on 127.0.0.1:27017.`);
+      await mongoose.disconnect(); // Cleanly reset connection topology
     }
+  }
+
+  // ------------------------------------------------------------------------
+  // STAGE 3: Cloud / Fallback In-Memory MongoDB Engine
+  // ------------------------------------------------------------------------
+  console.log(`✨ Cloud / Zero-Config environment detected without configured MONGODB_URI.`);
+  console.log(`🚀 Activating embedded in-memory MongoDB engine...`);
+
+  try {
+    const { MongoMemoryServer } = await import('mongodb-memory-server');
+    memoryServerInstance = await MongoMemoryServer.create();
+    activeMongoUri = memoryServerInstance.getUri();
+
+    const conn = await mongoose.connect(activeMongoUri);
+    console.log(`🍃 Connected to Embedded In-Memory MongoDB: ${activeMongoUri}`);
+    console.log(`✅ App started successfully with zero crash!`);
+    console.log(`💡 Tip: For persistent data across restarts on Render, set MONGODB_URI in Render's Environment tab.\n`);
+    return conn;
+  } catch (memErr) {
+    console.error(`❌ Critical database error:`, memErr);
+    throw memErr;
   }
 }
