@@ -1,0 +1,150 @@
+<%- include('../layouts/header') %>
+
+<div class="my-loans-hero">
+  <!-- Quota Meter Card -->
+  <div class="member-quota-card">
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div>
+        <span class="panel-tag">Patron Quota</span>
+        <h3 class="panel-title" style="margin-top: 0.4rem;">Borrowing Limit</h3>
+      </div>
+      <div style="font-size: 1.35rem; font-weight: 800; font-family: var(--font-mono);">
+        <%= activeLoans.length %> / <%= member.borrowLimit || 3 %>
+      </div>
+    </div>
+    <% 
+      const limit = member.borrowLimit || 3;
+      const pct = Math.min(100, Math.round((activeLoans.length / limit) * 100));
+      const gaugeClass = activeLoans.length >= limit ? 'danger' : activeLoans.length === limit - 1 ? 'warning' : '';
+    %>
+    <div class="quota-meter-bar">
+      <div class="quota-meter-fill <%= gaugeClass %>" style="width: <%= pct %>%;"></div>
+    </div>
+    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+      <% if (activeLoans.length >= limit) { %>
+        ⚠️ Borrowing limit reached. Please return an existing book before requesting another.
+      <% } else { %>
+        You can borrow <%= limit - activeLoans.length %> more title(s) from the catalogue.
+      <% } %>
+    </p>
+  </div>
+
+  <!-- Outstanding Fines Card -->
+  <div class="member-fines-summary-card">
+    <span class="panel-tag <%= unpaidFines > 0 ? 'tag-warning' : '' %>">Financial Ledger</span>
+    <h3 class="panel-title" style="margin-top: 0.4rem;">Outstanding Fines</h3>
+    <div style="font-size: 1.85rem; font-weight: 800; font-family: var(--font-mono); margin: 0.35rem 0; color: <%= unpaidFines > 0 ? 'var(--danger)' : 'var(--success)' %>;">
+      $<%= unpaidFines.toFixed(2) %>
+    </div>
+    <p style="font-size: 0.8rem; color: var(--text-muted);">
+      Total lifetime fines cleared: <strong>$<%= (member.totalFinesPaid || 0).toFixed(2) %></strong>
+    </p>
+  </div>
+</div>
+
+<!-- Active Borrowings Section -->
+<div class="loans-section-wrap">
+  <div class="loans-section-header">
+    <h3 class="sub-heading">Currently Borrowed Books</h3>
+    <span class="sub-caption">Standard loan period: 14 days &bull; Overdue fine rate: $0.75 / day</span>
+  </div>
+
+  <% if (activeLoans.length === 0) { %>
+    <div style="background: var(--bg-card); border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); padding: 2.5rem; text-align: center; margin-top: 1rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📖</div>
+      <h4>You currently have no borrowed books</h4>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Explore the catalogue to discover and borrow books.</p>
+      <a href="/books" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Browse Catalogue</a>
+    </div>
+  <% } else { %>
+    <div class="my-active-loans-grid">
+      <% activeLoans.forEach(loan => { 
+        const isOverdue = loan.status === 'overdue';
+        const countdownMsg = isOverdue
+          ? `⚠️ OVERDUE by ${loan.daysOverdue} days (Fine: $${loan.fineAccrued.toFixed(2)})`
+          : `Due on ${loan.dueDate.toISOString().split('T')[0]}`;
+      %>
+        <div class="active-loan-card <%= isOverdue ? 'is-overdue' : '' %>">
+          <div>
+            <span class="meta-pill" style="margin-bottom: 0.5rem; display: inline-block;"><%= loan.book ? loan.book.category : 'Book' %></span>
+            <h4 style="font-family: var(--font-serif); font-size: 1.15rem; margin-bottom: 0.25rem;">
+              <%= loan.book ? loan.book.title : 'Book' %>
+            </h4>
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+              by <%= loan.book ? loan.book.author : 'Unknown' %>
+            </div>
+
+            <div class="due-countdown-banner <%= isOverdue ? 'urgent' : '' %>">
+              <span><%= countdownMsg %></span>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+            <span style="font-size: 0.75rem; color: var(--text-faint); font-family: var(--font-mono);">
+              Issued: <%= loan.issueDate.toISOString().split('T')[0] %>
+            </span>
+
+            <form action="/circulation/return/<%= loan._id %>" method="POST">
+              <button type="submit" class="btn <%= isOverdue ? 'btn-warning' : 'btn-primary' %> btn-sm">
+                <%= isOverdue ? 'Return & Settle Fine' : 'Return Book' %>
+              </button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+
+<!-- Past History Section -->
+<div class="loans-section-wrap mt-lg">
+  <div class="loans-section-header">
+    <h3 class="sub-heading">Borrowing History</h3>
+    <span class="sub-caption">Books you have returned to the Athenaeum library</span>
+  </div>
+
+  <div class="table-card" style="margin-top: 1rem;">
+    <table class="standard-table">
+      <thead>
+        <tr>
+          <th>Book Title</th>
+          <th>Issue Date</th>
+          <th>Due Date</th>
+          <th>Returned On</th>
+          <th>Fine Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (returnedLoans.length === 0) { %>
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+              No completed loans in your borrowing history yet.
+            </td>
+          </tr>
+        <% } else { %>
+          <% returnedLoans.forEach(loan => { %>
+            <tr>
+              <td><strong><%= loan.book ? loan.book.title : 'Book' %></strong></td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem;"><%= loan.issueDate.toISOString().split('T')[0] %></td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem;"><%= loan.dueDate.toISOString().split('T')[0] %></td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem;"><%= loan.returnDate ? loan.returnDate.toISOString().split('T')[0] : '-' %></td>
+              <td>
+                <% if (loan.fineAccrued > 0) { %>
+                  <% if (loan.finePaid) { %>
+                    <span class="fine-amount-badge paid">Paid $<%= loan.fineAccrued.toFixed(2) %></span>
+                  <% } else { %>
+                    <span class="fine-amount-badge">Waived</span>
+                  <% } %>
+                <% } else { %>
+                  <span style="color: var(--success);">None</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

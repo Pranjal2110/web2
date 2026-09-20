@@ -1,0 +1,245 @@
+<%- include('../layouts/header') %>
+
+<div class="dashboard-hero">
+  <div class="dashboard-header-text">
+    <h2 class="section-title">Circulation & Inventory Overview</h2>
+    <p class="section-subtitle">Real-time telemetry on book utilization, member borrowing volumes, and overdue statuses.</p>
+  </div>
+  <div class="dashboard-quick-stats-pill">
+    <span><strong><%= stats.totalTitles %></strong> Titles</span> &bull; 
+    <span><strong><%= stats.issuedCopies %></strong> On Loan</span> &bull; 
+    <span style="<%= stats.overdueCount > 0 ? 'color: var(--danger); font-weight: 700;' : '' %>"><strong><%= stats.overdueCount %></strong> Overdue</span>
+  </div>
+</div>
+
+<!-- KPI Metric Cards -->
+<div class="kpi-grid">
+  <!-- Unique Titles -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap icon-indigo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+    <div class="kpi-content">
+      <span class="kpi-label">Unique Titles</span>
+      <div class="kpi-value"><%= stats.totalTitles %></div>
+      <span class="kpi-meta"><%= stats.totalCopies %> physical volumes in stock</span>
+    </div>
+  </div>
+
+  <!-- Currently Issued -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap icon-blue">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+    </div>
+    <div class="kpi-content">
+      <span class="kpi-label">Currently Issued</span>
+      <div class="kpi-value"><%= stats.issuedCopies %></div>
+      <span class="kpi-meta"><%= stats.utilizationPct %>% of collection on active loan</span>
+    </div>
+  </div>
+
+  <!-- Overdue Loans -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap icon-amber">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div class="kpi-content">
+      <span class="kpi-label">Overdue Loans</span>
+      <div class="kpi-value"><%= stats.overdueCount %></div>
+      <span class="kpi-meta <%= stats.overdueCount > 0 ? 'alert-text' : '' %>">
+        <%= stats.overdueCount > 0 ? `⚠️ ${stats.overdueCount} require immediate return` : 'All loans in good standing' %>
+      </span>
+    </div>
+  </div>
+
+  <!-- Outstanding Fines -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap icon-emerald">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div class="kpi-content">
+      <span class="kpi-label">Outstanding Fines</span>
+      <div class="kpi-value" style="<%= stats.totalUnpaidFines > 0 ? 'color: var(--danger);' : '' %>">$<%= stats.totalUnpaidFines.toFixed(2) %></div>
+      <span class="kpi-meta">$<%= stats.totalCollectedFines.toFixed(2) %> collected historically</span>
+    </div>
+  </div>
+
+  <!-- Registered Patrons -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap icon-purple">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    </div>
+    <div class="kpi-content">
+      <span class="kpi-label">Registered Patrons</span>
+      <div class="kpi-value"><%= stats.totalMembers %></div>
+      <span class="kpi-meta"><%= stats.activeBorrowersCount %> currently holding books</span>
+    </div>
+  </div>
+</div>
+
+<!-- Most-Borrowed Titles & Category Distribution Row -->
+<div class="dashboard-analytics-grid">
+  <!-- Most-Borrowed Titles (Core requirement) -->
+  <div class="dashboard-panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <span class="panel-tag">Popularity</span>
+        <h3 class="panel-title">Most-Borrowed Titles</h3>
+      </div>
+      <span class="panel-caption">Ranked by total circulation count</span>
+    </div>
+    <div class="panel-body">
+      <div class="most-borrowed-list">
+        <% 
+          const maxBorrow = mostBorrowed[0]?.borrowCount || 1;
+          mostBorrowed.forEach((book, idx) => {
+            const pct = Math.round(((book.borrowCount || 0) / maxBorrow) * 100);
+        %>
+          <div class="borrow-rank-item">
+            <div class="borrow-rank-info">
+              <div class="borrow-rank-title-group">
+                <span class="rank-number">#<%= idx + 1 %></span>
+                <a href="/books/<%= book._id %>" class="borrow-rank-title" style="text-decoration: none; color: inherit;">
+                  <%= book.title %>
+                </a>
+              </div>
+              <span class="borrow-rank-count"><%= book.borrowCount || 0 %> borrows</span>
+            </div>
+            <div class="borrow-meter-track">
+              <div class="borrow-meter-fill" style="width: <%= pct %>%;"></div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collection Category Breakdown -->
+  <div class="dashboard-panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <span class="panel-tag">Catalogue</span>
+        <h3 class="panel-title">Collection by Category</h3>
+      </div>
+      <span class="panel-caption">Physical volumes across disciplines</span>
+    </div>
+    <div class="panel-body">
+      <div class="category-breakdown-container">
+        <% 
+          const categoryColors = {
+            'Computer Science': '#6366f1',
+            'Literature': '#10b981',
+            'Science & Nature': '#8b5cf6',
+            'History & Philosophy': '#f59e0b',
+            'Arts & Architecture': '#ec4899',
+            'Economics & Society': '#0ea5e9'
+          };
+          categoryStats.forEach(cat => {
+            const pct = stats.totalCopies > 0 ? Math.round((cat.count / stats.totalCopies) * 100) : 0;
+            const color = categoryColors[cat._id] || '#6366f1';
+        %>
+          <div class="category-stat-row">
+            <div class="category-stat-header">
+              <span class="category-stat-title"><%= cat._id %></span>
+              <span class="category-stat-copies"><strong><%= cat.count %></strong> copies (<%= pct %>%)</span>
+            </div>
+            <div class="category-progress-track">
+              <div class="category-progress-fill" style="width: <%= pct %>%; background-color: <%= color %>;"></div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overdue Spotlight Table & Audit Activity Feed -->
+<div class="dashboard-activity-grid">
+  <!-- Overdue Loans Table -->
+  <div class="dashboard-panel overdue-spotlight-panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <span class="panel-tag tag-warning">Attention Required</span>
+        <h3 class="panel-title">Overdue Loans & Fine Accruals</h3>
+      </div>
+      <span class="panel-badge-status"><%= overdueLoans.length %> Overdue</span>
+    </div>
+    <div class="panel-body">
+      <div class="overdue-table-wrapper">
+        <table class="compact-table">
+          <thead>
+            <tr>
+              <th>Book</th>
+              <th>Borrower</th>
+              <th>Due Date</th>
+              <th>Days Overdue</th>
+              <th>Accrued Fine</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (overdueLoans.length === 0) { %>
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                  No overdue loans at this simulated date. All items returned or in active loan window.
+                </td>
+              </tr>
+            <% } else { %>
+              <% overdueLoans.forEach(loan => { %>
+                <tr>
+                  <td><strong><%= loan.book ? loan.book.title : 'Book' %></strong></td>
+                  <td><%= loan.member ? loan.member.name : 'Unknown' %></td>
+                  <td style="font-family: var(--font-mono); color: var(--danger);"><%= loan.dueDate.toISOString().split('T')[0] %></td>
+                  <td><strong style="color: var(--danger); font-family: var(--font-mono);">+<%= loan.daysOverdue %> days</strong></td>
+                  <td><strong style="color: var(--danger); font-family: var(--font-mono);">$<%= loan.fineAccrued.toFixed(2) %></strong></td>
+                  <td>
+                    <form action="/circulation/return/<%= loan._id %>" method="POST" style="display: inline;">
+                      <button type="submit" class="btn btn-secondary btn-sm">Return Book</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity Feed -->
+  <div class="dashboard-panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <span class="panel-tag">Audit Trail</span>
+        <h3 class="panel-title">Recent Transactions</h3>
+      </div>
+    </div>
+    <div class="panel-body">
+      <ul class="activity-timeline">
+        <% if (recentLogs.length === 0) { %>
+          <li style="color: var(--text-faint); font-size: 0.8rem; text-align: center; padding: 1rem;">No recent audit activity.</li>
+        <% } else { %>
+          <% recentLogs.forEach(log => { 
+            let icon = '📌';
+            let bg = 'var(--bg-secondary)';
+            if (log.action.includes('ISSUED')) { icon = '📤'; bg = 'var(--primary-light)'; }
+            else if (log.action.includes('RETURNED')) { icon = '📥'; bg = 'var(--success-bg)'; }
+            else if (log.action.includes('TIME_TRAVEL')) { icon = '⏳'; bg = 'var(--accent-gold-bg)'; }
+            else if (log.action.includes('FINE')) { icon = '💳'; bg = 'var(--accent-gold-bg)'; }
+            else if (log.action.includes('BOOK_ADDED')) { icon = '✨'; bg = 'var(--primary-light)'; }
+          %>
+            <li class="activity-item">
+              <div class="activity-icon" style="background: <%= bg %>;"><%= icon %></div>
+              <div class="activity-text">
+                <div><%= log.details %></div>
+                <div class="activity-time"><%= new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></div>
+              </div>
+            </li>
+          <% }); %>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

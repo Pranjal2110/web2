@@ -1,0 +1,77 @@
+<%- include('../layouts/header') %>
+
+<div style="max-width: 520px; margin: 2rem auto;">
+  <!-- Demo Personas Quick Select Box -->
+  <div class="table-card" style="padding: 1.5rem; margin-bottom: 2rem; border-color: var(--primary);">
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+      <span style="font-size: 1.3rem;">⚡</span>
+      <h3 style="font-size: 1.1rem; font-weight: 700;">Quick Demo Logins (1-Click)</h3>
+    </div>
+    <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+      Select an existing pre-seeded persona to test permissions, quotas, and fine calculations immediately:
+    </p>
+
+    <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+      <a href="/auth/demo/librarian" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+        <span style="font-size: 1.2rem;">👑</span>
+        <div>
+          <strong>Eleanor Vance</strong> <small style="color: var(--accent-gold); font-weight: 700;">(Staff Librarian)</small>
+          <div style="font-size: 0.74rem; color: var(--text-faint);">Full catalogue CRUD, circulation desk, patron dossiers</div>
+        </div>
+      </a>
+
+      <a href="/auth/demo/alex" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+        <span style="font-size: 1.2rem;">🎓</span>
+        <div>
+          <strong>Alex Rivera</strong> <small style="color: var(--primary); font-weight: 700;">(Patron - 2 loans active)</small>
+          <div style="font-size: 0.74rem; color: var(--text-faint);">Has 2/3 books borrowed; test borrowing up to limit</div>
+        </div>
+      </a>
+
+      <a href="/auth/demo/sarah" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+        <span style="font-size: 1.2rem;">⚠️</span>
+        <div>
+          <strong>Sarah Chen</strong> <small style="color: var(--danger); font-weight: 700;">(Patron - Overdue loan with fine)</small>
+          <div style="font-size: 0.74rem; color: var(--text-faint);">Has an overdue loan of "Clean Code"; test fine settlement</div>
+        </div>
+      </a>
+
+      <a href="/auth/demo/marcus" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+        <span style="font-size: 1.2rem;">✨</span>
+        <div>
+          <strong>Marcus Vance</strong> <small style="color: var(--success); font-weight: 700;">(Clean slate patron)</small>
+          <div style="font-size: 0.74rem; color: var(--text-faint);">Zero loans on record; clean profile</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Standard Login Form -->
+  <div class="table-card" style="padding: 2rem;">
+    <h2 class="section-title" style="font-size: 1.5rem; margin-bottom: 0.5rem;">Sign In to Athenaeum</h2>
+    <p class="section-subtitle" style="margin-bottom: 1.5rem;">Enter your library credentials below</p>
+
+    <form action="/login" method="POST" class="form-grid">
+      <div class="form-group full-width">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" class="styled-input" required placeholder="name@athenaeum.edu">
+      </div>
+
+      <div class="form-group full-width">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" class="styled-input" required placeholder="••••••••">
+        <span class="field-hint">Default password for demo accounts: <code>password123</code></span>
+      </div>
+
+      <div class="form-group full-width" style="margin-top: 0.5rem;">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+      </div>
+    </form>
+
+    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.84rem; color: var(--text-muted);">
+      Don't have a library card yet? <a href="/register" style="color: var(--primary); font-weight: 600;">Register here</a>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

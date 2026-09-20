@@ -1,0 +1,82 @@
+<%- include('../layouts/header') %>
+
+<div class="members-header">
+  <div>
+    <h2 class="section-title">Patron & Member Directory</h2>
+    <p class="section-subtitle">Manage membership quotas, monitor active borrowings, review fine histories, and inspect patron dossiers.</p>
+  </div>
+  <a href="/register" class="btn btn-primary">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Register New Patron</span>
+  </a>
+</div>
+
+<form action="/members" method="GET" class="members-toolbar">
+  <div class="search-box-wrap">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" name="q" value="<%= searchQuery %>" class="search-input" placeholder="Search members by name, email, or Card ID..." aria-label="Search members">
+    <% if (searchQuery) { %>
+      <a href="/members" class="clear-search-btn" title="Clear search">✕</a>
+    <% } %>
+  </div>
+</form>
+
+<div class="table-card">
+  <table class="standard-table">
+    <thead>
+      <tr>
+        <th>Patron / Member</th>
+        <th>Card ID</th>
+        <th>Role & Type</th>
+        <th>Active Loans</th>
+        <th>Borrowing Limit</th>
+        <th>Outstanding Fines</th>
+        <th>Member Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (members.length === 0) { %>
+        <tr>
+          <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+            No member records found matching "<%= searchQuery %>".
+          </td>
+        </tr>
+      <% } else { %>
+        <% members.forEach(m => { %>
+          <tr>
+            <td>
+              <strong><%= m.name %></strong>
+              <div style="font-size: 0.74rem; color: var(--text-muted);"><%= m.email %></div>
+            </td>
+            <td><code style="font-family: var(--font-mono); font-size: 0.82rem;"><%= m.cardId %></code></td>
+            <td>
+              <span class="panel-tag"><%= m.role.toUpperCase() %></span>
+            </td>
+            <td>
+              <span style="font-weight: 700; font-family: var(--font-mono);"><%= m.activeLoansCount %></span> / <%= m.borrowLimit || 3 %>
+            </td>
+            <td><%= m.borrowLimit || 3 %> books max</td>
+            <td>
+              <% if (m.unpaidFines > 0) { %>
+                <span class="fine-amount-badge">$<%= m.unpaidFines.toFixed(2) %></span>
+              <% } else { %>
+                <span style="color: var(--text-faint);">$0.00</span>
+              <% } %>
+            </td>
+            <td>
+              <span class="status-pill <%= m.status === 'active' ? 'status-active' : 'status-overdue' %>">
+                <%= m.status.toUpperCase() %>
+              </span>
+            </td>
+            <td>
+              <a href="/members/<%= m._id %>" class="btn btn-secondary btn-sm">Dossier & History</a>
+            </td>
+          </tr>
+        <% }); %>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../layouts/footer') %>

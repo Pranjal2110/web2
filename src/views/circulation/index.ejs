@@ -1,0 +1,168 @@
+<%- include('../layouts/header') %>
+
+<div class="circulation-header">
+  <div>
+    <h2 class="section-title">Circulation & Loan Operations</h2>
+    <p class="section-subtitle">Manage active checkouts, process book returns, collect or waive overdue fines, and issue new books.</p>
+  </div>
+  <button type="button" class="btn btn-primary" data-open-modal="directIssueModal">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Direct Book Issue</span>
+  </button>
+</div>
+
+<!-- Filters Row -->
+<div class="circulation-filters-row">
+  <div class="loan-status-tabs">
+    <a href="/circulation?status=all<%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %>" class="loan-tab-btn <%= currentFilter === 'all' ? 'active' : '' %>">
+      All Loans (<%= counts.all %>)
+    </a>
+    <a href="/circulation?status=active<%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %>" class="loan-tab-btn <%= currentFilter === 'active' ? 'active' : '' %>">
+      Active (<%= counts.active %>)
+    </a>
+    <a href="/circulation?status=overdue<%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %>" class="loan-tab-btn status-warn <%= currentFilter === 'overdue' ? 'active' : '' %>">
+      Overdue (<%= counts.overdue %>)
+    </a>
+    <a href="/circulation?status=returned<%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %>" class="loan-tab-btn <%= currentFilter === 'returned' ? 'active' : '' %>">
+      Returned (<%= counts.returned %>)
+    </a>
+  </div>
+
+  <form action="/circulation" method="GET" class="circulation-search-wrap">
+    <input type="hidden" name="status" value="<%= currentFilter %>">
+    <input type="text" name="q" value="<%= searchQuery %>" class="styled-input input-sm" placeholder="Filter loans by book or patron..." aria-label="Search loans">
+  </form>
+</div>
+
+<!-- Loans Table -->
+<div class="table-card">
+  <table class="standard-table">
+    <thead>
+      <tr>
+        <th>Loan ID</th>
+        <th>Book Title & ISBN</th>
+        <th>Borrower</th>
+        <th>Issue Date</th>
+        <th>Due Date</th>
+        <th>Status</th>
+        <th>Fine Accrual</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (loans.length === 0) { %>
+        <tr>
+          <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+            No loan records found matching current filter.
+          </td>
+        </tr>
+      <% } else { %>
+        <% loans.forEach(loan => { %>
+          <tr>
+            <td><code style="font-family: var(--font-mono); font-size: 0.8rem;"><%= loan._id.toString().slice(-6) %></code></td>
+            <td>
+              <strong><%= loan.book ? loan.book.title : 'Deleted Book' %></strong>
+              <div style="font-size: 0.74rem; color: var(--text-faint); font-family: var(--font-mono);"><%= loan.book ? loan.book.isbn : '' %></div>
+            </td>
+            <td>
+              <strong><%= loan.member ? loan.member.name : 'Unknown Patron' %></strong>
+              <div style="font-size: 0.74rem; color: var(--text-muted);"><%= loan.member ? loan.member.cardId : '' %></div>
+            </td>
+            <td style="font-family: var(--font-mono); font-size: 0.82rem;"><%= loan.issueDate.toISOString().split('T')[0] %></td>
+            <td style="font-family: var(--font-mono); font-size: 0.82rem;">
+              <strong style="<%= loan.status === 'overdue' ? 'color: var(--danger);' : '' %>"><%= loan.dueDate.toISOString().split('T')[0] %></strong>
+            </td>
+            <td>
+              <% if (loan.status === 'active') { %>
+                <span class="status-pill status-active">Active</span>
+              <% } else if (loan.status === 'overdue') { %>
+                <span class="status-pill status-overdue">⚠️ Overdue (+<%= loan.daysOverdue %>d)</span>
+              <% } else { %>
+                <span class="status-pill status-returned">Returned</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (loan.fineAccrued > 0) { %>
+                <% if (loan.finePaid) { %>
+                  <span class="fine-amount-badge paid">✓ $<%= loan.fineAccrued.toFixed(2) %> Paid</span>
+                <% } else { %>
+                  <span class="fine-amount-badge">$<%= loan.fineAccrued.toFixed(2) %> Unpaid</span>
+                <% } %>
+              <% } else { %>
+                <span style="color: var(--text-faint);">-</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (loan.status !== 'returned') { %>
+                <form action="/circulation/return/<%= loan._id %>" method="POST" style="display: inline;">
+                  <button type="submit" class="btn btn-secondary btn-sm">Return Book</button>
+                </form>
+              <% } else if (loan.fineAccrued > 0 && !loan.finePaid) { %>
+                <div style="display: flex; gap: 0.35rem;">
+                  <form action="/circulation/settle-fine/<%= loan._id %>" method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="pay">
+                    <button type="submit" class="btn btn-primary btn-sm">Collect $<%= loan.fineAccrued.toFixed(2) %></button>
+                  </form>
+                  <form action="/circulation/settle-fine/<%= loan._id %>" method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="waive">
+                    <button type="submit" class="btn btn-warning btn-sm">Waive</button>
+                  </form>
+                </div>
+              <% } else { %>
+                <span style="font-size: 0.76rem; color: var(--text-faint);">Completed</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<!-- Direct Issue Modal -->
+<div class="modal-backdrop hidden" id="directIssueModal" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-header">
+      <h3 class="modal-title">Direct Book Issue</h3>
+      <button type="button" class="modal-close-btn" data-close-modal="directIssueModal">✕</button>
+    </div>
+    <form action="/circulation/issue" method="POST">
+      <div class="modal-body form-grid">
+        <div class="form-group full-width">
+          <label for="memberId">Select Patron / Member <span class="required">*</span></label>
+          <select id="memberId" name="memberId" class="styled-select" required>
+            <option value="">-- Choose Member --</option>
+            <% members.forEach(m => { %>
+              <option value="<%= m._id %>"><%= m.name %> (<%= m.cardId %>) &bull; Limit: <%= m.borrowLimit || 3 %> books</option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="bookId">Select Book to Issue <span class="required">*</span></label>
+          <select id="bookId" name="bookId" class="styled-select" required>
+            <option value="">-- Choose Book (<%= availableBooks.length %> in stock) --</option>
+            <% availableBooks.forEach(b => { %>
+              <option value="<%= b._id %>"><%= b.title %> (<%= b.isbn %>) - [<%= b.availableCopies %> copies available]</option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="loanDuration">Loan Duration</label>
+          <select id="loanDuration" name="loanDuration" class="styled-select">
+            <option value="14" selected>Standard (14 Days)</option>
+            <option value="7">Short Loan (7 Days)</option>
+            <option value="28">Extended Loan (28 Days)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal="directIssueModal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Confirm & Issue Book</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

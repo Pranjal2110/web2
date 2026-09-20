@@ -1,0 +1,122 @@
+<%- include('../layouts/header') %>
+
+<div style="margin-bottom: 1.5rem;">
+  <a href="/members" class="btn btn-secondary btn-sm">&larr; Back to Member Directory</a>
+</div>
+
+<div class="table-card" style="padding: 2rem;">
+  <!-- Header Banner -->
+  <div style="display: flex; gap: 1.5rem; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+    <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent-gold)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800;">
+      <%= member.name.slice(0, 2).toUpperCase() %>
+    </div>
+    <div>
+      <h2 style="font-family: var(--font-serif); font-size: 1.7rem; margin-bottom: 0.25rem;"><%= member.name %></h2>
+      <div style="color: var(--text-muted); font-size: 0.9rem;">
+        <%= member.email %> &bull; Card ID: <code style="font-family: var(--font-mono);"><%= member.cardId %></code>
+      </div>
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+        <span class="panel-tag"><%= member.role.toUpperCase() %></span>
+        <span class="status-pill <%= member.status === 'active' ? 'status-active' : 'status-overdue' %>">
+          <%= member.status.toUpperCase() %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm);">
+      <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Active Borrowings</span>
+      <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); margin-top: 0.2rem;">
+        <%= activeLoans.length %> / <%= member.borrowLimit || 3 %>
+      </div>
+    </div>
+    <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm);">
+      <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Total Fines Cleared</span>
+      <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: var(--success); margin-top: 0.2rem;">
+        $<%= (member.totalFinesPaid || 0).toFixed(2) %>
+      </div>
+    </div>
+    <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm);">
+      <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Outstanding Fines</span>
+      <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: <%= unpaidFines > 0 ? 'var(--danger)' : 'var(--text-main)' %>; margin-top: 0.2rem;">
+        $<%= unpaidFines.toFixed(2) %>
+      </div>
+    </div>
+    <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm);">
+      <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Registered Since</span>
+      <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.35rem;">
+        <%= member.createdAt ? member.createdAt.toISOString().split('T')[0] : '2024' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Loans -->
+  <h3 style="font-size: 1.15rem; margin-bottom: 0.75rem;">Currently Borrowed Books (<%= activeLoans.length %>)</h3>
+  <div style="margin-bottom: 2rem;">
+    <table class="standard-table">
+      <thead>
+        <tr><th>Book Title</th><th>Issue Date</th><th>Due Date</th><th>Status</th><th>Accrued Fine</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <% if (activeLoans.length === 0) { %>
+          <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active borrowings currently held.</td></tr>
+        <% } else { %>
+          <% activeLoans.forEach(loan => { %>
+            <tr>
+              <td><strong><%= loan.book ? loan.book.title : 'Book' %></strong></td>
+              <td style="font-family: var(--font-mono); font-size: 0.82rem;"><%= loan.issueDate.toISOString().split('T')[0] %></td>
+              <td style="font-family: var(--font-mono); font-size: 0.82rem;">
+                <strong style="<%= loan.status === 'overdue' ? 'color: var(--danger);' : '' %>"><%= loan.dueDate.toISOString().split('T')[0] %></strong>
+              </td>
+              <td>
+                <span class="status-pill <%= loan.status === 'overdue' ? 'status-overdue' : 'status-active' %>">
+                  <%= loan.status.toUpperCase() %>
+                </span>
+              </td>
+              <td style="font-family: var(--font-mono);">
+                <%= loan.fineAccrued > 0 ? `$${loan.fineAccrued.toFixed(2)}` : '-' %>
+              </td>
+              <td>
+                <form action="/circulation/return/<%= loan._id %>" method="POST" style="display: inline;">
+                  <button type="submit" class="btn btn-secondary btn-sm">Process Return</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- History of Returned Books -->
+  <h3 style="font-size: 1.15rem; margin-bottom: 0.75rem;">Past Borrowing History (<%= returnedLoans.length %>)</h3>
+  <table class="standard-table">
+    <thead>
+      <tr><th>Book Title</th><th>Issue Date</th><th>Returned On</th><th>Fine Result</th></tr>
+    </thead>
+    <tbody>
+      <% if (returnedLoans.length === 0) { %>
+        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No completed loan history on file.</td></tr>
+      <% } else { %>
+        <% returnedLoans.forEach(loan => { %>
+          <tr>
+            <td><strong><%= loan.book ? loan.book.title : 'Book' %></strong></td>
+            <td style="font-family: var(--font-mono); font-size: 0.82rem;"><%= loan.issueDate.toISOString().split('T')[0] %></td>
+            <td style="font-family: var(--font-mono); font-size: 0.82rem;"><%= loan.returnDate ? loan.returnDate.toISOString().split('T')[0] : '-' %></td>
+            <td>
+              <% if (loan.fineAccrued > 0) { %>
+                <%= loan.finePaid ? `Paid $${loan.fineAccrued.toFixed(2)}` : 'Waived' %>
+              <% } else { %>
+                <span style="color: var(--success);">None</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../layouts/footer') %>

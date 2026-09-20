@@ -1,0 +1,108 @@
+<%- include('../layouts/header') %>
+
+<div style="margin-bottom: 1.5rem;">
+  <a href="/books" class="btn btn-secondary btn-sm">&larr; Back to Catalogue</a>
+</div>
+
+<% 
+  const COVER_GRADIENTS = {
+    'tech-deep': 'linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4338ca 100%)',
+    'literature-classic': 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%)',
+    'science-cosmic': 'linear-gradient(135deg, #3b0764 0%, #6b21a8 50%, #9333ea 100%)',
+    'history-amber': 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #d97706 100%)',
+    'minimal-dark': 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+  };
+  const bgStyle = book.coverUrl 
+    ? `background-image: url('${book.coverUrl}'); background-size: cover;`
+    : `background: ${COVER_GRADIENTS[book.coverStyle] || COVER_GRADIENTS['tech-deep']};`;
+  const availClass = book.availableCopies === 0 ? 'out-of-stock' : book.availableCopies === 1 ? 'low-stock' : 'in-stock';
+  const availLabel = book.availableCopies === 0 ? 'Out of Stock (0 Available)' : `${book.availableCopies} of ${book.totalCopies} Available Copies`;
+%>
+
+<div class="table-card" style="padding: 2rem;">
+  <div class="book-detail-layout">
+    <div class="detail-cover-box" style="<%= bgStyle %>">
+      <div class="book-cover-gradient" style="height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.5rem; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);">
+        <div class="book-badge-category" style="position: static; align-self: flex-start; margin-bottom: 0.5rem;"><%= book.category %></div>
+        <div class="book-cover-title-badge" style="font-size: 1.3rem;"><%= book.title %></div>
+        <div class="book-cover-author-badge"><%= book.author %></div>
+      </div>
+    </div>
+
+    <div>
+      <h2 style="font-family: var(--font-serif); font-size: 1.85rem; line-height: 1.2; margin-bottom: 0.35rem;"><%= book.title %></h2>
+      <p style="color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.25rem;">By <strong><%= book.author %></strong></p>
+
+      <div style="margin-bottom: 1.25rem;">
+        <span class="availability-pill <%= availClass %>">
+          <span class="availability-indicator-dot"></span>
+          <%= availLabel %>
+        </span>
+      </div>
+
+      <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.65; margin-bottom: 1.5rem;">
+        <%= book.description || 'No detailed synopsis provided for this title.' %>
+      </p>
+
+      <div class="detail-meta-list">
+        <div class="detail-meta-row"><span>ISBN</span><span style="font-family: var(--font-mono);"><%= book.isbn %></span></div>
+        <div class="detail-meta-row"><span>Discipline / Category</span><span><%= book.category %></span></div>
+        <div class="detail-meta-row"><span>Publication Year</span><span><%= book.year || 'N/A' %></span></div>
+        <div class="detail-meta-row"><span>Shelf / Call Location</span><span style="font-family: var(--font-mono);"><%= book.shelfLocation %></span></div>
+        <div class="detail-meta-row"><span>All-time Circulation</span><span><%= book.borrowCount || 0 %> borrows</span></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="margin-top: 2rem; display: flex; gap: 0.75rem; align-items: center;">
+        <% if (locals.currentUser && currentUser.role === 'librarian') { %>
+          <a href="/books/<%= book._id %>/edit" class="btn btn-primary">Edit Book Details</a>
+          <form action="/books/<%= book._id %>/delete" method="POST" onsubmit="return confirm('Delete this book from the library catalogue?');">
+            <button type="submit" class="btn btn-danger">Delete Title</button>
+          </form>
+        <% } else { %>
+          <% if (isAlreadyBorrowedByCurrentUser) { %>
+            <button type="button" class="btn btn-secondary" disabled style="color: var(--accent-gold);">
+              ✓ You currently have this title borrowed
+            </button>
+          <% } else if (book.availableCopies > 0) { %>
+            <form action="/circulation/borrow/<%= book._id %>" method="POST">
+              <button type="submit" class="btn btn-primary">Borrow Book (14 Days Standard Loan)</button>
+            </form>
+          <% } else { %>
+            <button type="button" class="btn btn-primary" disabled>Currently Unavailable (0 Copies Left)</button>
+          <% } %>
+        <% } %>
+      </div>
+
+      <!-- Active Borrowers List (Visible to Librarians) -->
+      <% if (locals.currentUser && currentUser.role === 'librarian' && activeBorrowers.length > 0) { %>
+        <div style="margin-top: 2.5rem; border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
+          <h4 style="font-size: 0.95rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Active Borrowers Holding Copies (<%= activeBorrowers.length %>)
+          </h4>
+          <table class="compact-table">
+            <thead>
+              <tr><th>Patron</th><th>Card ID</th><th>Due Date</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <% activeBorrowers.forEach(loan => { %>
+                <tr>
+                  <td><strong><%= loan.member ? loan.member.name : 'Unknown' %></strong></td>
+                  <td><code><%= loan.member ? loan.member.cardId : '' %></code></td>
+                  <td><%= loan.dueDate.toISOString().split('T')[0] %></td>
+                  <td>
+                    <span class="status-pill <%= loan.status === 'overdue' ? 'status-overdue' : 'status-active' %>">
+                      <%= loan.status.toUpperCase() %>
+                    </span>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

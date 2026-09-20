@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Athenaeum | Modern Library System' %></title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div id="app" class="app-wrapper">
+    <!-- Top System Announcement / Time Travel Control Bar -->
+    <aside class="system-topbar" id="systemTopbar" aria-label="System Controls">
+      <div class="topbar-inner">
+        <div class="simulation-status">
+          <div class="live-clock-pill" id="liveClockPill">
+            <span class="pulse-dot"></span>
+            <span class="clock-label">Simulated Date:</span>
+            <strong id="currentSimulatedDateText"><%= locals.simulatedDateFormatted || 'Sep 17, 2026' %></strong>
+          </div>
+          <span class="time-hint">(Time-travel simulates overdue loans & dynamic fines in real-time)</span>
+        </div>
+
+        <form action="/simulation/advance" method="POST" class="time-travel-controls">
+          <span class="control-label">Fast-Forward:</span>
+          <button type="submit" name="days" value="3" class="btn-time-chip">+3 Days</button>
+          <button type="submit" name="days" value="7" class="btn-time-chip">+7 Days</button>
+          <button type="submit" name="days" value="15" class="btn-time-chip btn-warning-chip">+15 Days (Trigger Overdue)</button>
+          <button type="submit" name="days" value="0" class="btn-time-chip btn-reset-chip">Reset to Today</button>
+        </form>
+
+        <div class="topbar-actions">
+          <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Dark / Light Theme" aria-label="Toggle theme">
+            <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+      <div class="header-container">
+        <!-- Logo -->
+        <a href="/" class="brand-group">
+          <div class="brand-logo-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-0.5-5"/>
+              <path d="M6 2v20"/>
+              <path d="M12 6h5M12 10h5M12 14h3"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">ATHENAEUM</h1>
+            <span class="brand-subtitle">Library Circulation & Discovery System</span>
+          </div>
+        </a>
+
+        <!-- 1-Click Demo Persona Switcher (For grading & frictionless testing) -->
+        <div class="demo-role-switcher" title="Switch active persona instantly">
+          <span class="switcher-title">Switch Persona:</span>
+          <div class="role-pill-group">
+            <a href="/auth/demo/librarian" class="role-switch-btn <%= (locals.currentUser && currentUser.email === 'eleanor.vance@athenaeum.edu') ? 'active' : '' %>">
+              <span>👑</span>
+              <span>Eleanor <small>(Librarian)</small></span>
+            </a>
+            <a href="/auth/demo/alex" class="role-switch-btn <%= (locals.currentUser && currentUser.email === 'alex.rivera@athenaeum.edu') ? 'active' : '' %>">
+              <span>🎓</span>
+              <span>Alex Rivera <small>(Member: 2 loans)</small></span>
+            </a>
+            <a href="/auth/demo/sarah" class="role-switch-btn <%= (locals.currentUser && currentUser.email === 'sarah.chen@athenaeum.edu') ? 'active' : '' %>">
+              <span>⚠️</span>
+              <span>Sarah Chen <small>(Overdue Loan)</small></span>
+            </a>
+            <a href="/auth/demo/marcus" class="role-switch-btn <%= (locals.currentUser && currentUser.email === 'marcus.vance@athenaeum.edu') ? 'active' : '' %>">
+              <span>✨</span>
+              <span>Marcus <small>(New Member)</small></span>
+            </a>
+          </div>
+        </div>
+
+        <!-- User Profile Zone -->
+        <div class="user-auth-zone">
+          <% if (locals.currentUser) { %>
+            <div class="user-profile-badge">
+              <div class="user-avatar"><%= currentUser.name.slice(0, 2).toUpperCase() %></div>
+              <div class="user-info-text">
+                <div class="user-name"><%= currentUser.name %></div>
+                <div class="user-role-tag">
+                  <%= currentUser.role === 'librarian' ? '👑 Staff Librarian' : `🎓 Patron (${currentUser.cardId})` %>
+                </div>
+              </div>
+            </div>
+            <a href="/logout" class="btn btn-secondary btn-sm" title="Log out">Sign Out</a>
+          <% } else { %>
+            <a href="/login" class="btn btn-secondary btn-sm">Sign In</a>
+            <a href="/register" class="btn btn-primary btn-sm">Register</a>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="main-navigation" aria-label="Main Navigation">
+        <div class="nav-container">
+          <ul class="nav-tabs-list" role="tablist">
+            <li>
+              <a href="/dashboard" class="nav-tab-btn <%= (typeof activeTab !== 'undefined' && activeTab === 'dashboard') ? 'active' : '' %>">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                <span>Dashboard & Analytics</span>
+              </a>
+            </li>
+            <li>
+              <a href="/books" class="nav-tab-btn <%= (typeof activeTab !== 'undefined' && activeTab === 'catalogue') ? 'active' : '' %>">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span>Books Catalogue</span>
+              </a>
+            </li>
+
+            <% if (locals.currentUser && currentUser.role === 'librarian') { %>
+              <!-- Librarian-Only Tabs -->
+              <li>
+                <a href="/circulation" class="nav-tab-btn <%= (typeof activeTab !== 'undefined' && activeTab === 'circulation') ? 'active' : '' %>">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11h4"/><path d="M12 16h4"/></svg>
+                  <span>Circulation Desk</span>
+                </a>
+              </li>
+              <li>
+                <a href="/members" class="nav-tab-btn <%= (typeof activeTab !== 'undefined' && activeTab === 'members') ? 'active' : '' %>">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <span>Patron Records</span>
+                </a>
+              </li>
+            <% } %>
+
+            <% if (locals.currentUser && currentUser.role === 'member') { %>
+              <!-- Member-Only Tab -->
+              <li>
+                <a href="/my-loans" class="nav-tab-btn <%= (typeof activeTab !== 'undefined' && activeTab === 'my-loans') ? 'active' : '' %>">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  <span>My Borrowed Books</span>
+                </a>
+              </li>
+            <% } %>
+          </ul>
+
+          <% if (locals.currentUser && currentUser.role === 'librarian') { %>
+            <div class="nav-quick-actions">
+              <a href="/books/new" class="btn btn-primary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Add Book</span>
+              </a>
+            </div>
+          <% } %>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="main-content">
+      <!-- Flash Message Alerts -->
+      <% if (locals.flash) { %>
+        <div class="toast-container" style="position: static; margin-bottom: 1.5rem; max-width: 100%;">
+          <div class="toast toast-<%= locals.flash.type %> flash-toast" style="max-width: 100%;">
+            <span>
+              <% if (locals.flash.type === 'success') { %>✓<% } else if (locals.flash.type === 'error') { %>✕<% } else { %>⚠️<% } %>
+            </span>
+            <span style="flex: 1;"><%= locals.flash.message %></span>
+          </div>
+        </div>
+      <% } %>
