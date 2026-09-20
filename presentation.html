@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Athenaeum - Smart India Hackathon Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Newsreader:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sih-blue: #1d4ed8;
+      --navy: #0f172a;
+      --slate: #334155;
+      --light-slate: #64748b;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --border: #e2e8f0;
+      --amber: #d97706;
+      --green: #15803d;
+      --green-bg: #f0fdf4;
+      --green-border: #86efac;
+      --red: #b91c1c;
+      --red-bg: #fef2f2;
+      --red-border: #fca5a5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0b0f19;
+      color: var(--navy);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Deck Frame (16:9 Aspect Ratio) */
+    .deck-container {
+      width: 100%;
+      max-width: 1200px;
+      aspect-ratio: 16 / 9;
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 40px 60px;
+      flex-direction: column;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Top SIH Header Banner */
+    .sih-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+
+    .sih-title-wrap h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--sih-blue);
+      text-transform: uppercase;
+    }
+
+    .sih-title-wrap p {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--light-slate);
+      letter-spacing: 0.3px;
+    }
+
+    .sih-logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sih-badge-text {
+      text-align: right;
+      line-height: 1.1;
+    }
+
+    .sih-badge-text .sih-main {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--navy);
+      display: block;
+    }
+
+    .sih-badge-text .sih-year {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--sih-blue);
+    }
+
+    .sih-brain-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffedd5, #fef08a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #f59e0b;
+      font-size: 22px;
+    }
+
+    /* Slide 1 Cover Layout */
+    .cover-hero-title {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .cover-hero-title h2 {
+      font-size: 40px;
+      font-weight: 800;
+      color: var(--navy);
+      font-family: 'Newsreader', serif;
+      letter-spacing: -0.5px;
+    }
+
+    .cover-hero-title p {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--amber);
+      margin-top: 4px;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 32px;
+      flex: 1;
+      align-items: center;
+    }
+
+    .cover-details-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .detail-row {
+      display: flex;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .detail-label {
+      font-weight: 800;
+      color: var(--navy);
+      min-width: 210px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .detail-label::before {
+      content: "•";
+      font-size: 18px;
+      line-height: 1;
+      color: var(--sih-blue);
+    }
+
+    .detail-val {
+      font-weight: 500;
+      color: var(--slate);
+      flex: 1;
+    }
+
+    .cover-card-box {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .cover-card-box h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--sih-blue);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cover-card-box ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cover-card-box li {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cover-card-box li span {
+      color: var(--green);
+    }
+
+    /* Standard Slide Layouts */
+    .slide-heading {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 18px;
+    }
+
+    .cards-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+    }
+
+    .cards-3col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card.red-tint {
+      background: var(--red-bg);
+      border-color: var(--red-border);
+    }
+
+    .card.green-tint {
+      background: var(--green-bg);
+      border-color: var(--green-border);
+    }
+
+    .card.amber-tint {
+      background: #fef3c7;
+      border-color: #fcd34d;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title.blue { color: var(--sih-blue); }
+    .card-title.red { color: var(--red); }
+    .card-title.green { color: var(--green); }
+    .card-title.amber { color: var(--amber); }
+
+    .card-subtitle {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 12px;
+    }
+
+    .card-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .card-list li {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--slate);
+    }
+
+    .card-list li strong {
+      color: var(--navy);
+      font-weight: 700;
+    }
+
+    /* Controls Bar */
+    .deck-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      background: #0f172a;
+      width: 100%;
+      max-width: 1200px;
+      border-radius: 12px;
+      margin-top: 14px;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ctrl-btn {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .ctrl-btn:hover {
+      background: var(--sih-blue);
+      border-color: var(--sih-blue);
+    }
+
+    /* Print styling */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .deck-controls {
+        display: none;
+      }
+      .deck-container {
+        box-shadow: none;
+        max-width: 100%;
+        border-radius: 0;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container" id="deckContainer">
+
+    <!-- =================================================================== -->
+    <!-- SLIDE 1: Title Slide (Matches SIH Reference Layout) -->
+    <!-- =================================================================== -->
+    <div class="slide active" id="slide-1">
+      <header class="sih-header">
+        <div class="sih-title-wrap">
+          <h1>SMART INDIA HACKATHON 2024</h1>
+          <p>Ministry of Education, AICTE & MIC Initiative</p>
+        </div>
+        <div class="sih-logo-badge">
+          <div class="sih-badge-text">
+            <span class="sih-main">SMART INDIA</span>
+            <span class="sih-main">HACKATHON</span>
+            <span class="sih-year">2024</span>
+          </div>
+          <div class="sih-brain-icon">💡</div>
+        </div>
+      </header>
+
+      <div class="cover-hero-title">
+        <h2>Athenaeum</h2>
+        <p>Next-Generation Library Management & Automated Circulation System</p>
+      </div>
+
+      <div class="cover-grid">
+        <div class="cover-details-list">
+          <div class="detail-row">
+            <span class="detail-label">Problem Statement ID –</span>
+            <span class="detail-val"><strong>SIH-EDU-1733</strong></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Problem Statement Title-</span>
+            <span class="detail-val">Smart Library Catalogue, Circulation & Asset Management System with Real-Time Due Date & Automated Fine Engine</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Theme-</span>
+            <span class="detail-val">Education / Public Services</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">PS Category-</span>
+            <span class="detail-val">Software</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Team ID-</span>
+            <span class="detail-val"><strong>34005</strong></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Team Name-</span>
+            <span class="detail-val"><strong>Sarva-Conquerors</strong></span>
+          </div>
+        </div>
+
+        <div class="cover-card-box">
+          <h3>🏛️ Key Solution Highlights</h3>
+          <ul>
+            <li><span>✔</span> Role-Based Portals (Librarian Admin & Patron)</li>
+            <li><span>✔</span> 3 Strict Safety Guardrails (0-copies & quota limits)</li>
+            <li><span>✔</span> Dynamic Overdue Fine Engine ($0.75/day)</li>
+            <li><span>✔</span> Live Telemetry & Popularity Analytics</li>
+            <li><span>✔</span> Full-Stack Node.js + Express + EJS SSR</li>
+            <li><span>✔</span> MongoDB Atlas Cloud + In-Memory Fallback</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- SLIDE 2: Problem Statement & Proposed Solution -->
+    <!-- =================================================================== -->
+    <div class="slide" id="slide-2">
+      <header class="sih-header">
+        <div class="sih-title-wrap">
+          <h1>SMART INDIA HACKATHON 2024</h1>
+          <p>Problem & Solution Definition</p>
+        </div>
+        <div class="sih-logo-badge">
+          <div class="sih-badge-text">
+            <span class="sih-main">SMART INDIA</span>
+            <span class="sih-year">2024</span>
+          </div>
+          <div class="sih-brain-icon">💡</div>
+        </div>
+      </header>
+
+      <h2 class="slide-heading">Problem Statement & Proposed Solution</h2>
+
+      <div class="cards-2col">
+        <div class="card red-tint">
+          <div class="card-title red">⚠️ Current Challenges in Libraries</div>
+          <ul class="card-list">
+            <li><strong>Inventory Discrepancies:</strong> Traditional library ledgers suffer from manual counting errors, lost inventory, and lack of real-time stock sync.</li>
+            <li><strong>No Strict Checkout Guardrails:</strong> Patrons frequently borrow out-of-stock books, hoard multiple copies of high-demand titles, or exceed member borrowing quotas.</li>
+            <li><strong>Uncollected Overdue Fines:</strong> Calculating fines manually based on calendar days is tedious, error-prone, and causes financial loss for public institutions.</li>
+            <li><strong>Lack of Operational Telemetry:</strong> Administrators lack real-time visibility into popular disciplines, stock turnover, and patron borrowing patterns.</li>
+          </ul>
+        </div>
+
+        <div class="card green-tint">
+          <div class="card-title green">💡 Our Solution: Athenaeum</div>
+          <ul class="card-list">
+            <li><strong>Full-Stack SSR Platform:</strong> Built on Node.js, Express, EJS, and MongoDB Atlas to provide instant, secure, server-side rendered pages.</li>
+            <li><strong>Multi-Layer Safety Guardrails:</strong> Automated algorithms reject 0-copy issues, enforce 3-book member limits, and eliminate duplicate loans.</li>
+            <li><strong>Dynamic Overdue Fine Engine:</strong> Computes late penalties ($0.75/day) in real time, with a Time-Machine simulator (+3d, +7d, +15d) for instant verification.</li>
+            <li><strong>Real-Time Analytics Telemetry:</strong> Live dashboard with physical copy utilization %, ranked popularity meters, and audit trails.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- SLIDE 3: Technical Architecture & Stack -->
+    <!-- =================================================================== -->
+    <div class="slide" id="slide-3">
+      <header class="sih-header">
+        <div class="sih-title-wrap">
+          <h1>SMART INDIA HACKATHON 2024</h1>
+          <p>Technical Architecture</p>
+        </div>
+        <div class="sih-logo-badge">
+          <div class="sih-badge-text">
+            <span class="sih-main">SMART INDIA</span>
+            <span class="sih-year">2024</span>
+          </div>
+          <div class="sih-brain-icon">💡</div>
+        </div>
+      </header>
+
+      <h2 class="slide-heading">Technical Architecture & System Design</h2>
+
+      <div class="cards-3col">
+        <div class="card">
+          <div class="card-title blue">🖥️ Presentation Layer</div>
+          <div class="card-subtitle">EJS & Vanilla CSS</div>
+          <ul class="card-list">
+            <li><strong>Server-Side Rendering (SSR):</strong> Fast first-contentful paint and zero client bundling lag.</li>
+            <li><strong>Curated Design System:</strong> Dual dark & light mode theme toggle with glassmorphism.</li>
+            <li><strong>User Feedback:</strong> Interactive modals, action toasts, and session flash alerts.</li>
+            <li><strong>Semantic HTML5:</strong> High accessibility (a11y) and clean component layout partials.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title blue">⚙️ Application Layer</div>
+          <div class="card-subtitle">Node.js & Express.js</div>
+          <ul class="card-list">
+            <li><strong>Modular Controllers:</strong> Clean route separation (auth, book, circulation, dashboard, member).</li>
+            <li><strong>Role-Based Access (RBAC):</strong> Strict guards isolating Librarian admin from Patron actions.</li>
+            <li><strong>Session Auth:</strong> Cookie sessions powered by <code>express-session</code> and <code>connect-mongo</code>.</li>
+            <li><strong>Password Encryption:</strong> Bcrypt hashing with 10 salt rounds in pre-save hooks.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title blue">🍃 Data & Storage Layer</div>
+          <div class="card-subtitle">MongoDB Atlas & In-Memory</div>
+          <ul class="card-list">
+            <li><strong>Mongoose Schemas:</strong> Structured models for User, Book, Loan, Setting, and Log.</li>
+            <li><strong>Compound Text Index:</strong> Sub-millisecond text search across Title, Author, and ISBN.</li>
+            <li><strong>MongoDB Atlas:</strong> Scalable cloud persistence across replica sets.</li>
+            <li><strong>Zero-Crash Fallback:</strong> Automatic embedded in-memory MongoDB for cloud deployments.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- SLIDE 4: Core Features & The 3 Strict Guardrails -->
+    <!-- =================================================================== -->
+    <div class="slide" id="slide-4">
+      <header class="sih-header">
+        <div class="sih-title-wrap">
+          <h1>SMART INDIA HACKATHON 2024</h1>
+          <p>Features & Safety Guardrails</p>
+        </div>
+        <div class="sih-logo-badge">
+          <div class="sih-badge-text">
+            <span class="sih-main">SMART INDIA</span>
+            <span class="sih-year">2024</span>
+          </div>
+          <div class="sih-brain-icon">💡</div>
+        </div>
+      </header>
+
+      <h2 class="slide-heading">Core Features & Strict Business Logic Guardrails</h2>
+
+      <div class="cards-2col">
+        <div class="card">
+          <div class="card-title blue">📋 Operational Features</div>
+          <ul class="card-list">
+            <li><strong>Role-Based Portals:</strong> Dedicated Librarian workspace (desk, inventory, dossiers) and Member personal portal ("My Loans").</li>
+            <li><strong>Librarian Book CRUD:</strong> Manage title, author, ISBN, category, copy counts, shelf location, and year.</li>
+            <li><strong>Multi-Filter Search:</strong> Real-time keyword search, discipline categorization, and availability filtering.</li>
+            <li><strong>Automated Copy Sync:</strong> Automatically decrements <code>availableCopies</code> on issue, and auto-increments upon book return.</li>
+          </ul>
+        </div>
+
+        <div class="card amber-tint">
+          <div class="card-title amber">🛡️ The 3 Mandatory Safety Guardrails</div>
+          <ul class="card-list">
+            <li><strong>1. Zero Available Copies Guard:</strong> Completely blocks checkout when <code>availableCopies === 0</code> (e.g. <em>Clean Code</em>). Displays explicit out-of-stock badge.</li>
+            <li><strong>2. Per-Member Borrowing Quota:</strong> Strictly enforces patron limit (default 3 books). Blocks 4th borrow attempt until previous titles are returned.</li>
+            <li><strong>3. Duplicate Checkout Prevention:</strong> Rejects issuing a second physical copy of the same title to the same patron while an active checkout exists.</li>
+            <li><strong>4. Inventory Delete Protection:</strong> Librarians are blocked from deleting books with active checkouts.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- SLIDE 5: Stretch Goal & Innovation -->
+    <!-- =================================================================== -->
+    <div class="slide" id="slide-5">
+      <header class="sih-header">
+        <div class="sih-title-wrap">
+          <h1>SMART INDIA HACKATHON 2024</h1>
+          <p>Innovation & Telemetry</p>
+        </div>
+        <div class="sih-logo-badge">
+          <div class="sih-badge-text">
+            <span class="sih-main">SMART INDIA</span>
+            <span class="sih-year">2024</span>
+          </div>
+          <div class="sih-brain-icon">💡</div>
+        </div>
+      </header>
+
+      <h2 class="slide-heading">Stretch Goal & Innovation: Automated Fine Engine & Telemetry</h2>
+
+      <div class="cards-2col">
+        <div class="card">
+          <div class="card-title blue">💰 Automated Overdue Fine Engine</div>
+          <ul class="card-list">
+            <li><strong>Dynamic Calculation:</strong> Computes late penalties in real-time at <code>$0.75 / day overdue</code> against the simulated clock.</li>
+            <li><strong>Time Machine Simulation:</strong> Header controls fast-forward time (+3d, +7d, +15d) to immediately verify overdue transitions and fines.</li>
+            <li><strong>Fine Settlement Workflow:</strong> Supports cash collection (recording payment in patron ledger) and librarian staff waivers.</li>
+            <li><strong>Visual Alerts:</strong> Red badges and warning banners alert patrons and staff to overdue books.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title blue">📊 Real-Time Analytics & Telemetry</div>
+          <ul class="card-list">
+            <li><strong>High-Level KPIs:</strong> Real-time counters for Total Titles, Physical Copies, Active Loans, Overdue Books, and Fines.</li>
+            <li><strong>Most-Borrowed Rankings:</strong> Dynamic popularity leaderboard tracking high-demand books.</li>
+            <li><strong>Discipline Distribution:</strong> Proportional visual meters across Computer Science, Literature, Science, and Economics.</li>
+            <li><strong>Audit Activity Trail:</strong> Chronological record of all book issues, returns, inventory edits, and waivers.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- SLIDE 6: Verification & Future Roadmap -->
+    <!-- =================================================================== -->
+    <div class="slide" id="slide-6">
+      <header class="sih-header">
+        <div class="sih-title-wrap">
+          <h1>SMART INDIA HACKATHON 2024</h1>
+          <p>Testing & Future Scope</p>
+        </div>
+        <div class="sih-logo-badge">
+          <div class="sih-badge-text">
+            <span class="sih-main">SMART INDIA</span>
+            <span class="sih-year">2024</span>
+          </div>
+          <div class="sih-brain-icon">💡</div>
+        </div>
+      </header>
+
+      <h2 class="slide-heading">Testing, Verification & Future Scope</h2>
+
+      <div class="cards-2col">
+        <div class="card green-tint">
+          <div class="card-title green">🧪 100% Automated Test Coverage</div>
+          <ul class="card-list">
+            <li><strong>21 of 21 Assertions Passing:</strong> Automated integration test suite in <code>tests/circulation.test.js</code>.</li>
+            <li><strong>Seeding Validation:</strong> Confirms 12 books, 4 users, and 5 initial loans.</li>
+            <li><strong>Guardrail Verification:</strong> Confirms 0-copy issues, 4th-book quota violations, and duplicate checkouts are blocked.</li>
+            <li><strong>Inventory Restoration:</strong> Confirms available copies increment back to shelf count on return.</li>
+            <li><strong>Mathematical Accuracy:</strong> Confirms exact fine accrual across multiple overdue loans.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title blue">🚀 Feasibility & Future Roadmap</div>
+          <ul class="card-list">
+            <li><strong>Zero-Crash Cloud Deploy:</strong> Automatic embedded in-memory database prevents deployment crashes on Render/Railway.</li>
+            <li><strong>Optical Barcode & RFID:</strong> Integrate barcode scanners and RFID gates for instant contactless checkout.</li>
+            <li><strong>Automated Notifications:</strong> SMS / WhatsApp due date reminders 48 hours before due date to eliminate late fees.</li>
+            <li><strong>Inter-Library Loan Protocol:</strong> Enable multi-branch resource sharing across educational institutions.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Deck Navigation Controls -->
+  <div class="deck-controls">
+    <div class="btn-group">
+      <button class="ctrl-btn" id="prevBtn" onclick="changeSlide(-1)">◀ Previous</button>
+      <button class="ctrl-btn" id="nextBtn" onclick="changeSlide(1)">Next ▶</button>
+    </div>
+    <span id="slideIndicator">Slide 1 of 6</span>
+    <div class="btn-group">
+      <button class="ctrl-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 6;
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+      currentSlide = index;
+
+      document.querySelectorAll('.slide').forEach((s, idx) => {
+        s.classList.toggle('active', idx + 1 === currentSlide);
+      });
+
+      document.getElementById('slideIndicator').innerText = `Slide ${currentSlide} of ${totalSlides}`;
+      document.getElementById('prevBtn').disabled = currentSlide === 1;
+      document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+    }
+
+    function changeSlide(direction) {
+      showSlide(currentSlide + direction);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        changeSlide(1);
+      } else if (e.key === 'ArrowLeft') {
+        changeSlide(-1);
+      }
+    });
+
+    showSlide(1);
+  </script>
+</body>
+</html>
